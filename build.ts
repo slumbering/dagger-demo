@@ -13,17 +13,19 @@ connect(async (client: Client) => {
     // mount cloned repository into Node image
     const runner = client
       .container().from(`node:${nodeVersion}`)
+      .pipeline("install")
       .withDirectory("/src", source)
       .withWorkdir("/src")
       .withExec(["npm", "install"])
 
     // run tests
     // write the test output to the host
-    await runner.withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
+    await runner.pipeline("test").withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
 
     // build application using specified Node version
     // write the build output to the host
     await runner
+      .pipeline("build")
       .withExec(["npm", "run", "build"])
       .directory("build/")
       .export(`./build-node-${nodeVersion}`)
