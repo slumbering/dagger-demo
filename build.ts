@@ -17,9 +17,11 @@ connect(async (client: Client) => {
       .withWorkdir("/src")
       .withExec(["npm", "install"])
 
+      await runner.pipeline("lint").withExec(["echo", "hello world"]).exitCode()
     // run tests
     // write the test output to the host
     await runner.pipeline("test").withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
+    
 
     // build application using specified Node version
     // write the build output to the host
