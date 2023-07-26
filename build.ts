@@ -14,7 +14,7 @@ connect(async (client: Client) => {
   for (const nodeVersion of nodeVersions) {
     // mount cloned repository into Node image
     const runner = client
-      .container().from(`node:${nodeVersion}`)
+      .container().pipeline(target).from(`node:${nodeVersion}`)
       .withDirectory("/src", source)
       .withWorkdir("/src")
       .withExec(["npm", "install", "--legacy-peer-deps"])
@@ -22,10 +22,9 @@ connect(async (client: Client) => {
     if (target === 'test') {
       // run tests
       // write the test output to the host
-      await runner.pipeline("test").withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
+      await runner.withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
     } else if (target === 'build') {
       await runner
-        .pipeline("build")
         .withExec(["npm", "run", "build"])
         .directory("build/")
         .export(`./build-node-${nodeVersion}`)
