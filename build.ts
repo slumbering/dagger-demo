@@ -8,13 +8,14 @@ connect(async (client: Client) => {
 
   const target = process.argv[2];
   // get reference to the local project
+  client = client.pipeline(target)
   const source = client.host().directory(".", { exclude: ["node_modules/"] })
 
   // for each Node version
   for (const nodeVersion of nodeVersions) {
     // mount cloned repository into Node image
     const runner = client
-      .container().pipeline(target).from(`node:${nodeVersion}`)
+      .container().from(`node:${nodeVersion}`)
       .withDirectory("/src", source)
       .withWorkdir("/src")
       .withExec(["npm", "install", "--legacy-peer-deps"])
