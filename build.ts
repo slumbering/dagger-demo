@@ -18,7 +18,7 @@ connect(async (client: Client) => {
       .container().from(`node:${nodeVersion}`)
       .withDirectory("/src", source)
       .withWorkdir("/src")
-      .withExec(["npm", "install", "--legacy-peer-deps"])
+      .withExec(["npm", "install"])
 
     if (target === 'test') {
       // run tests
