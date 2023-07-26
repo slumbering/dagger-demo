@@ -18,6 +18,7 @@ connect(async (client: Client) => {
       .withExec(["npm", "install"])
 
     // run tests
+    // write the test output to the host
     await runner.withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
 
     // build application using specified Node version
