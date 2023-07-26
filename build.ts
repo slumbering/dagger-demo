@@ -5,8 +5,10 @@ connect(async (client: Client) => {
   // Set Node versions against which to test and build
   const nodeVersions = ["12", "14", "16"]
 
+
+  const target = process.argv[2];
   // get reference to the local project
-  const source = client.host().directory(".", { exclude: ["node_modules/"]})
+  const source = client.host().directory(".", { exclude: ["node_modules/"] })
 
   // for each Node version
   for (const nodeVersion of nodeVersions) {
@@ -15,20 +17,21 @@ connect(async (client: Client) => {
       .container().from(`node:${nodeVersion}`)
       .withDirectory("/src", source)
       .withWorkdir("/src")
-      .withExec(["npm", "install"])
+      .withExec(["npm", "install", "--legacy-peer-deps"])
 
-      await runner.pipeline("lint").withExec(["echo", "hello world"]).exitCode()
-    // run tests
-    // write the test output to the host
-    await runner.pipeline("test").withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
-    
+    if (target === 'test') {
+      // run tests
+      // write the test output to the host
+      await runner.pipeline("test").withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
+    } else if (target === 'build') {
+      await runner
+        .pipeline("build")
+        .withExec(["npm", "run", "build"])
+        .directory("build/")
+        .export(`./build-node-${nodeVersion}`)
+    }
 
     // build application using specified Node version
     // write the build output to the host
-    await runner
-      .pipeline("build")
-      .withExec(["npm", "run", "build"])
-      .directory("build/")
-      .export(`./build-node-${nodeVersion}`)
   }
-}, {LogOutput: process.stdout})
+}, { LogOutput: process.stdout })

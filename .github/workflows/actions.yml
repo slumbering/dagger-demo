@@ -4,7 +4,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  lint:
     name: build
     runs-on: ubuntu-latest
     steps:
@@ -14,7 +14,22 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install deps
         run: npm ci
-      - name: Run Dagger pipeline
-        env: 
+      - name: Run build
+        env:
           _EXPERIMENTAL_DAGGER_CLOUD_TOKEN: e0bb36d5-1936-4f67-8301-4a08d1f7aa32
-        run: node --loader ts-node/esm build.ts
+        run: node --loader ts-node/esm build.ts build
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/checkout@v3
+      - name: Install deps
+        run: npm ci
+      - name: Run test
+        env:
+          _EXPERIMENTAL_DAGGER_CLOUD_TOKEN: e0bb36d5-1936-4f67-8301-4a08d1f7aa32
+        run: node --loader ts-node/esm build.ts test
