@@ -16,7 +16,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn Dagger toto
+          Learn Dagger tata
         </a>
       </header>
     </div>
