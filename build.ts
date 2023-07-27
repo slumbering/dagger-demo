@@ -23,7 +23,7 @@ connect(async (client: Client) => {
     if (target === 'test') {
       // run tests
       // write the test output to the host
-      await runner.withExec(["npm", "test", "--", "--watchAll=false"]).exitCode()
+      await runner.withExec(["npm", "test", "--", "--watchAll=false"]).sync()
     } else if (target === 'build') {
       await runner
         .withExec(["npm", "run", "build"])
