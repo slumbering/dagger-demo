@@ -16,7 +16,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Do not learn Dagger
+          Learn Dagger
         </a>
       </header>
     </div>
