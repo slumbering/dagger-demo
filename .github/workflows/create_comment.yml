@@ -1,0 +1,36 @@
+name: Create preview environment
+
+on:
+  pull_request:
+    paths:
+      - "./dagger"
+      - .github/workflows/create_comment.yml
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  # Enable manual trigger for easy debugging
+  # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    # 1/2. 👆 Uncomment above & comment line below 👇
+    # runs-on: dagger-runner
+    steps:
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions/checkout@v3
+      - name: Create preview environment
+        working-directory: ./dagger
+        run: |
+          npm ci
+          node --loader ts-node/esm create.mjs
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          # 2/2. 👇 (Un)comment line below
+          # _EXPERIMENTAL_DAGGER_RUNNER_HOST: "unix:///var/run/buildkit/buildkitd.sock"
