@@ -135,7 +135,7 @@ console.log("🐞 ----------------------------------🐞")
 
 
 	const octokit = new Octokit({
-		authStrategy: createActionAuth
+		auth: authentication.token
 	});
 
 	await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
