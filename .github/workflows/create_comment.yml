@@ -2,9 +2,6 @@ name: Create preview environment
 
 on:
   pull_request:
-    paths:
-      - "./dagger"
-      - .github/workflows/create_comment.yml
     branches:
       - main
     types:
@@ -29,7 +26,7 @@ jobs:
         working-directory: ./dagger
         run: |
           npm ci
-          node --loader ts-node/esm create.mjs
+          node --loader ts-node/esm create.mts
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           # 2/2. 👇 (Un)comment line below
