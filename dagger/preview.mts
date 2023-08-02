@@ -67,18 +67,18 @@ app = "dagger-cloud-${githubRef()}"
 
 // Install and build the app
 function app(c: Client): Container {
-	const workdir = path.dirname(url.fileURLToPath(`${import.meta.url}/../..`))
+	const workdir = path.dirname(url.fileURLToPath(`${import.meta.url}/..`))
 
 	if (!workdir) {
 		throw new Error("workdir must be set")
 	}
-	const src = join(workdir, "app", "cloud");
+	
 	const node = c.container({platform: containerPlatform}).from(`node:${nodeJSVersion}`)
 	const yarnCache = `/usr/local/share/.cache/yarn/${nodeJSVersion}`
 	const yarnCacheVolume = `dagger-cloud-yarn-${nodeJSVersion}`
 
 	const app = node.pipeline("app")
-		.withDirectory("/app", c.host().directory(src, { exclude: ["node_modules, .next"] }))
+		.withDirectory(".", c.host().directory(workdir, { exclude: ["node_modules, .next"] }))
 		.withMountedCache(yarnCache, c.cacheVolume(yarnCacheVolume))
 		.withEnvVariable("YARN_CACHE_FOLDER", yarnCache)
 		.withWorkdir("/app")
