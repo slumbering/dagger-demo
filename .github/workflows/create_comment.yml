@@ -29,5 +29,7 @@ jobs:
           node --loader ts-node/esm create.mts
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_CONTEXT: ${{ toJson(github) }}
           # 2/2. 👇 (Un)comment line below
           # _EXPERIMENTAL_DAGGER_RUNNER_HOST: "unix:///var/run/buildkit/buildkitd.sock"
