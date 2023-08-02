@@ -3,8 +3,7 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import * as path from "path";
 import * as url from "url";
-import { Octokit } from "@octokit/core";
-import { createActionAuth } from "@octokit/auth-action";
+import { Octokit } from "@octokit/action";
 
 // https://hub.docker.com/_/node
 const nodeJSVersion = "16"
@@ -126,24 +125,19 @@ function getGihubContext() {
 async function createGithubComment(comment: string) {
 	const { owner, repo, prNumber } = getGihubContext();
 
-	const auth = createActionAuth();
-	const authentication = await auth();
+	const octokit = new Octokit();
 
-console.log("🐞 ----------------------------------🐞")
-console.log("🐞  authentication:", authentication)
-console.log("🐞 ----------------------------------🐞")
-
-
-	const octokit = new Octokit({
-		auth: authentication.token
-	});
-
-	await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
+	const {data} = await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
     owner,
     repo,
     issue_number: prNumber,
     body: `Deploy preview: ${comment}`
   });
+
+	console.log("🐞 --------------🐞")
+	console.log("🐞  data:", data)
+	console.log("🐞 --------------🐞")
+
 }
 
 // Create Dagger client
