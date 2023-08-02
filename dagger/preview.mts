@@ -5,7 +5,7 @@ import * as path from "path";
 import * as url from "url";
 
 // https://hub.docker.com/_/node
-const nodeJSVersion = "16"
+const nodeJSVersion = "18.17"
 // https://hub.docker.com/r/flyio/flyctl/tags
 const flyctlVersion = "0.1.62"
 // https://fly.io/dashboard/dagger
@@ -48,7 +48,7 @@ function flyctl(c: Client) {
 app = "dagger-cloud-${githubRef()}"
 
 [processes]
-	app = "yarn start"
+	app = "npm start"
 
 [http_service]
 	processes = ["app"]
@@ -72,20 +72,16 @@ function app(c: Client): Container {
 	if (!workdir) {
 		throw new Error("workdir must be set")
 	}
-	
+
 	const node = c.container({platform: containerPlatform}).from(`node:${nodeJSVersion}`)
-	const yarnCache = `/usr/local/share/.cache/yarn/${nodeJSVersion}`
-	const yarnCacheVolume = `dagger-cloud-yarn-${nodeJSVersion}`
 
 	const app = node.pipeline("app")
 		.withDirectory(".", c.host().directory(workdir, { exclude: ["node_modules, .next"] }))
-		.withMountedCache(yarnCache, c.cacheVolume(yarnCacheVolume))
-		.withEnvVariable("YARN_CACHE_FOLDER", yarnCache)
 		.withWorkdir("/app")
-		.withExec(["yarn", "install"])
+		.withExec(["npm", "install"])
 		.withEnvVariable("NEXT_PUBLIC_API_URL", "https://api.dagger.cloud/query")
 		.withEnvVariable("NEXT_PUBLIC_API_ORIGIN_URL", "https://api.dagger.cloud")
-		.withExec(["yarn", "build"])
+		.withExec(["npm", "build"])
 
 	return app
 }
