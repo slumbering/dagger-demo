@@ -126,19 +126,36 @@ function getGihubContext() {
 async function createGithubComment(comment: string) {
 	const { owner, repo, prNumber } = getGihubContext();
 
+	console.log("🐞 ----------------------🐞")
+	console.log("🐞  prNumber:", prNumber)
+	console.log("🐞 ----------------------🐞")
+
+
+	console.log("🐞 --------------🐞")
+	console.log("🐞  repo:", repo)
+	console.log("🐞 --------------🐞")
+
+
+	console.log("🐞 ----------------🐞")
+	console.log("🐞  owner:", owner)
+	console.log("🐞 ----------------🐞")
+
+
 console.log("GITHUB_TOKEN", process.env.GITHUB_TOKEN)
 	const octokit = new Octokit({
 		authStrategy: createActionAuth
 	});
 
+	console.log("🐞 --------------------🐞")
+	console.log("🐞  octokit.log:", octokit.log)
+	console.log("🐞 --------------------🐞")
+
+
 	await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
     owner,
     repo,
     issue_number: prNumber,
-    body: `Deploy preview: ${comment}`,
-    headers: {
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
+    body: `Deploy preview: ${comment}`
   });
 }
 
