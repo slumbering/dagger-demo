@@ -22,16 +22,25 @@ jobs:
         with:
           node-version: 18
       - uses: actions/checkout@v3
-      - run: npm install @octokit/action
       - name: Create preview environment
         working-directory: ./dagger
+        id: create_preview_env
         run: |
           npm ci
-          node --loader ts-node/esm create.mts
+          OUTPUT=$(node --loader ts-node/esm create.mts)
+          echo "::set-output name=preview_url::$OUTPUT"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
+      - name: Add comment
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '${{ steps.create_preview_env.outputs.preview_url }}'
+            })
           # 2/2. 👇 (Un)comment line below
           # _EXPERIMENTAL_DAGGER_RUNNER_HOST: "unix:///var/run/buildkit/buildkitd.sock"

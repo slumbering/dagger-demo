@@ -3,7 +3,6 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import * as path from "path";
 import * as url from "url";
-import { Octokit } from "@octokit/action";
 
 // https://hub.docker.com/_/node
 const nodeJSVersion = "16"
@@ -107,69 +106,35 @@ function gitSHA(): string {
 	return gitSHA
 }
 
-function getGihubContext() {
-	if(!process.env.GITHUB_REPOSITORY || !process.env.GITHUB_PR_NUMBER) {
-		throw new Error("Error while retrieving github context")
-	}
-	const githubRepository = process.env.GITHUB_REPOSITORY;
-	const [ owner, repo ] = githubRepository.split("/");
-  const prNumber = process.env.GITHUB_PR_NUMBER as unknown as number;
-
-	return {
-		owner,
-		repo,
-		prNumber,
-	}
-}
-
-async function createGithubComment(comment: string) {
-	const { owner, repo, prNumber } = getGihubContext();
-
-	const octokit = new Octokit();
-
-	const {data} = await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
-    owner,
-    repo,
-    issue_number: prNumber,
-    body: `Deploy preview: ${comment}`
-  });
-
-	console.log("🐞 --------------🐞")
-	console.log("🐞  data:", data)
-	console.log("🐞 --------------🐞")
-
-}
-
 // Create Dagger client
 export function createClient() {
 	return connect(
 		async (client: Client) => {
-			createGithubComment("https://dagger.cloud");
-			// 	try {
-			// 		await flyctl(client).withExec(["status"]).sync()
-			// 	} catch (error) {
-			// 		try {
-			// 			await flyctl(client)
-			// 				.withExec(["apps", "create", `dagger-cloud-${githubRef()}`, "--org", flyOrg]).sync()
-			// 		} catch (error) {
-			// 			console.error(error)
-			// 		}
-			// 	}
+				try {
+					await flyctl(client).withExec(["status"]).sync()
+				} catch (error) {
+					try {
+						await flyctl(client)
+							.withExec(["apps", "create", `dagger-cloud-${githubRef()}`, "--org", flyOrg]).sync()
+					} catch (error) {
+						console.error(error)
+					}
+				}
 
-			// const exportTarball = process.env.EXPORT
-			// if (exportTarball) {
-			// 	await app(client).export("tmp/app.tar")
-			// 	console.log("STOPPING FOR LOCAL DEBUGGING, e.g. docker load -i tmp/app.tar")
-			// 	process.exit(0)
-			// }
+			const exportTarball = process.env.EXPORT
+			if (exportTarball) {
+				await app(client).export("tmp/app.tar")
+				console.log("STOPPING FOR LOCAL DEBUGGING, e.g. docker load -i tmp/app.tar")
+				process.exit(0)
+			}
 
-			// const appImageRef = await app(client)
-			// 	.withRegistryAuth("registry.fly.io", "x", flyTokenSecret(client))
-			// 	.publish(`registry.fly.io/dagger-cloud-${githubRef()}:${gitSHA()}`)
+			const appImageRef = await app(client)
+				.withRegistryAuth("registry.fly.io", "x", flyTokenSecret(client))
+				.publish(`registry.fly.io/dagger-cloud-${githubRef()}:${gitSHA()}`)
 
-			// await flyctl(client).pipeline("deploy")
-			// 	.withExec(["deploy", "--now", "--app", `dagger-cloud-${githubRef()}`, "--image", appImageRef, "--vm-memory", appMemoryMB, "--ha=false", "--strategy", deployStrategy, "--wait-timeout", waitSeconds])
-			// 	.sync()
+			await flyctl(client).pipeline("deploy")
+				.withExec(["deploy", "--now", "--app", `dagger-cloud-${githubRef()}`, "--image", appImageRef, "--vm-memory", appMemoryMB, "--ha=false", "--strategy", deployStrategy, "--wait-timeout", waitSeconds])
+				.sync()
 		}, { LogOutput: process.stdout }
 	)
 }
