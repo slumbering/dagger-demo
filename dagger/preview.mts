@@ -109,27 +109,22 @@ function gitSHA(): string {
 }
 
 function getGihubContext() {
-	if(!process.env.GITHUB_CONTEXT) {
-		throw new Error("GITHUB_CONTEXT env var must be set")
+	if(!process.env.GITHUB_REPOSITORY || !process.env.GITHUB_PR_NUMBER) {
+		throw new Error("Error while retrieving github context")
 	}
-	const githubContext = JSON.parse(process.env.GITHUB_CONTEXT || "{}");
-
-	console.log("🐞 --------------------------------🐞")
-	console.log("🐞  githubContext:", githubContext)
-	console.log("🐞 --------------------------------🐞")
-
-	const { owner, repo } = githubContext.repository;
-  const prNumber = githubContext.payload.pull_request.number;
+	const githubRepository = process.env.GITHUB_REPOSITORY;
+	const [ owner, repo ] = githubRepository.split("/");
+  const prNumber = process.env.GITHUB_PR_NUMBER as unknown as number;
 
 	return {
 		owner,
 		repo,
-		issue_number: prNumber,
+		prNumber,
 	}
 }
 
 async function createGithubComment(comment: string) {
-	const { owner, repo, issue_number: prNumber } = getGihubContext();
+	const { owner, repo, prNumber } = getGihubContext();
 
 	const octokit = new Octokit({
 		authStrategy: createActionAuth
