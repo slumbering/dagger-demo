@@ -3,11 +3,9 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 import * as path from "path";
 import * as url from "url";
-import { Octokit } from "@octokit/core";
-import { createActionAuth } from "@octokit/auth-action";
 
 // https://hub.docker.com/_/node
-const nodeJSVersion = "16"
+const nodeJSVersion = "18.17"
 // https://hub.docker.com/r/flyio/flyctl/tags
 const flyctlVersion = "0.1.62"
 // https://fly.io/dashboard/dagger
@@ -50,7 +48,7 @@ function flyctl(c: Client) {
 app = "dagger-cloud-${githubRef()}"
 
 [processes]
-	app = "yarn start"
+	app = "npm run start"
 
 [http_service]
 	processes = ["app"]
@@ -69,25 +67,21 @@ app = "dagger-cloud-${githubRef()}"
 
 // Install and build the app
 function app(c: Client): Container {
-	const workdir = path.dirname(url.fileURLToPath(`${import.meta.url}/../..`))
+	const workdir = path.dirname(url.fileURLToPath(`${import.meta.url}/..`))
 
 	if (!workdir) {
 		throw new Error("workdir must be set")
 	}
-	const src = join(workdir, "app", "cloud");
+
 	const node = c.container({platform: containerPlatform}).from(`node:${nodeJSVersion}`)
-	const yarnCache = `/usr/local/share/.cache/yarn/${nodeJSVersion}`
-	const yarnCacheVolume = `dagger-cloud-yarn-${nodeJSVersion}`
 
 	const app = node.pipeline("app")
-		.withDirectory("/app", c.host().directory(src, { exclude: ["node_modules, .next"] }))
-		.withMountedCache(yarnCache, c.cacheVolume(yarnCacheVolume))
-		.withEnvVariable("YARN_CACHE_FOLDER", yarnCache)
+		.withDirectory(".", c.host().directory(workdir, { exclude: ["node_modules, .next"] }))
 		.withWorkdir("/app")
-		.withExec(["yarn", "install"])
+		.withExec(["npm", "install"])
 		.withEnvVariable("NEXT_PUBLIC_API_URL", "https://api.dagger.cloud/query")
 		.withEnvVariable("NEXT_PUBLIC_API_ORIGIN_URL", "https://api.dagger.cloud")
-		.withExec(["yarn", "build"])
+		.withExec(["npm", "run", "build"])
 
 	return app
 }
@@ -108,69 +102,35 @@ function gitSHA(): string {
 	return gitSHA
 }
 
-function getGihubContext() {
-	if(!process.env.GITHUB_CONTEXT) {
-		throw new Error("GITHUB_CONTEXT env var must be set")
-	}
-	const githubContext = JSON.parse(process.env.GITHUB_CONTEXT || "{}");
-	const { owner, repo } = githubContext.repository;
-  const prNumber = githubContext.payload.pull_request.number;
-
-	return {
-		owner,
-		repo,
-		issue_number: prNumber,
-	}
-}
-
-async function createGithubComment(comment: string) {
-	const { owner, repo, issue_number: prNumber } = getGihubContext();
-
-	const octokit = new Octokit({
-		authStrategy: createActionAuth
-	});
-
-	await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
-    owner,
-    repo,
-    issue_number: prNumber,
-    body: `Deploy preview: ${comment}`,
-    headers: {
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
-  });
-}
-
 // Create Dagger client
 export function createClient() {
 	return connect(
 		async (client: Client) => {
-			createGithubComment("https://dagger.cloud");
-			// 	try {
-			// 		await flyctl(client).withExec(["status"]).sync()
-			// 	} catch (error) {
-			// 		try {
-			// 			await flyctl(client)
-			// 				.withExec(["apps", "create", `dagger-cloud-${githubRef()}`, "--org", flyOrg]).sync()
-			// 		} catch (error) {
-			// 			console.error(error)
-			// 		}
-			// 	}
+				try {
+					await flyctl(client).withExec(["status"]).sync()
+				} catch (error) {
+					try {
+						await flyctl(client)
+							.withExec(["apps", "create", `dagger-cloud-${githubRef()}`, "--org", flyOrg]).sync()
+					} catch (error) {
+						console.error(error)
+					}
+				}
 
-			// const exportTarball = process.env.EXPORT
-			// if (exportTarball) {
-			// 	await app(client).export("tmp/app.tar")
-			// 	console.log("STOPPING FOR LOCAL DEBUGGING, e.g. docker load -i tmp/app.tar")
-			// 	process.exit(0)
-			// }
+			const exportTarball = process.env.EXPORT
+			if (exportTarball) {
+				await app(client).export("tmp/app.tar")
+				console.log("STOPPING FOR LOCAL DEBUGGING, e.g. docker load -i tmp/app.tar")
+				process.exit(0)
+			}
 
-			// const appImageRef = await app(client)
-			// 	.withRegistryAuth("registry.fly.io", "x", flyTokenSecret(client))
-			// 	.publish(`registry.fly.io/dagger-cloud-${githubRef()}:${gitSHA()}`)
+			const appImageRef = await app(client)
+				.withRegistryAuth("registry.fly.io", "x", flyTokenSecret(client))
+				.publish(`registry.fly.io/dagger-cloud-${githubRef()}:${gitSHA()}`)
 
-			// await flyctl(client).pipeline("deploy")
-			// 	.withExec(["deploy", "--now", "--app", `dagger-cloud-${githubRef()}`, "--image", appImageRef, "--vm-memory", appMemoryMB, "--ha=false", "--strategy", deployStrategy, "--wait-timeout", waitSeconds])
-			// 	.sync()
+			await flyctl(client).pipeline("deploy")
+				.withExec(["deploy", "--now", "--app", `dagger-cloud-${githubRef()}`, "--image", appImageRef, "--vm-memory", appMemoryMB, "--ha=false", "--strategy", deployStrategy, "--wait-timeout", waitSeconds])
+				.sync()
 		}, { LogOutput: process.stdout }
 	)
 }
