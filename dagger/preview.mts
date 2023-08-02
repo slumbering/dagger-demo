@@ -142,6 +142,7 @@ async function createGithubComment(comment: string) {
 
 
 console.log("GITHUB_TOKEN", process.env.GITHUB_TOKEN)
+
 	const octokit = new Octokit({
 		authStrategy: createActionAuth
 	});
