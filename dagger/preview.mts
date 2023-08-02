@@ -48,7 +48,7 @@ function flyctl(c: Client) {
 app = "dagger-cloud-${githubRef()}"
 
 [processes]
-	app = "npm start"
+	app = "npm run start"
 
 [http_service]
 	processes = ["app"]
@@ -81,7 +81,7 @@ function app(c: Client): Container {
 		.withExec(["npm", "install"])
 		.withEnvVariable("NEXT_PUBLIC_API_URL", "https://api.dagger.cloud/query")
 		.withEnvVariable("NEXT_PUBLIC_API_ORIGIN_URL", "https://api.dagger.cloud")
-		.withExec(["npm", "build"])
+		.withExec(["npm", "run", "build"])
 
 	return app
 }
