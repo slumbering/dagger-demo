@@ -22,6 +22,7 @@ jobs:
         with:
           node-version: 18
       - uses: actions/checkout@v3
+      - run: npm install @octokit/action
       - name: Create preview environment
         working-directory: ./dagger
         run: |
