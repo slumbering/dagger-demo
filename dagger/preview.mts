@@ -113,6 +113,11 @@ function getGihubContext() {
 		throw new Error("GITHUB_CONTEXT env var must be set")
 	}
 	const githubContext = JSON.parse(process.env.GITHUB_CONTEXT || "{}");
+
+	console.log("🐞 --------------------------------🐞")
+	console.log("🐞  githubContext:", githubContext)
+	console.log("🐞 --------------------------------🐞")
+
 	const { owner, repo } = githubContext.repository;
   const prNumber = githubContext.payload.pull_request.number;
 
