@@ -126,6 +126,7 @@ function getGihubContext() {
 async function createGithubComment(comment: string) {
 	const { owner, repo, prNumber } = getGihubContext();
 
+console.log("GITHUB_TOKEN", process.env.GITHUB_TOKEN)
 	const octokit = new Octokit({
 		authStrategy: createActionAuth
 	});
