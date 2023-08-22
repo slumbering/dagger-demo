@@ -3,7 +3,7 @@ import { connect } from "@dagger.io/dagger"
 // initialize Dagger client
 connect(async (client) => {
   // Set Node versions against which to test and build
-  const nodeVersions = ["9", "10", "12", "13", "14"]
+  const nodeVersions = ["9", "10", "12", "13"]
 
   // get reference to the local project
   const source = client.host().directory(".", { exclude: ["node_modules/"]})
