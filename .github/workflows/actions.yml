@@ -17,4 +17,4 @@ jobs:
       - name: Run Dagger pipeline
         env: 
           _EXPERIMENTAL_DAGGER_CLOUD_TOKEN: e0bb36d5-1936-4f67-8301-4a08d1f7aa32
-        run: node build.js
+        run: node --loader ts-node/esm build.ts
